@@ -1,0 +1,10 @@
+{
+"SpaProxyServer": {
+"ServerUrl": "https://localhost:53109",
+"RedirectUrl": "",
+"LaunchCommand": "npm start",
+"WorkingDirectory": "D:\\Workspace-2026\\Angular\\angular-application\\ShoppingCart.Server\\..\\ShoppingCartAPI.client",
+"MaxTimeoutInSeconds": "120",
+"KeepRunning": "false"
+}
+}

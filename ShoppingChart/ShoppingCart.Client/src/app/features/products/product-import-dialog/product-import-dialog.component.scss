@@ -1,0 +1,27 @@
+.full-width {
+  width: 100%;
+}
+
+.history-table {
+  margin-bottom: 16px;
+}
+
+.empty-hint {
+  text-align: center;
+  color: rgba(0, 0, 0, 0.54);
+  padding: 16px;
+}
+
+.import-form {
+  padding-top: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.row {
+  display: flex;
+  gap: 16px;
+
+  mat-form-field {
+    flex: 1;
+  }
+}

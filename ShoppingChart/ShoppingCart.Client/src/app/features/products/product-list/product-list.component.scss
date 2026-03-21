@@ -1,0 +1,20 @@
+.spacer {
+  flex: 1 1 auto;
+}
+
+.table-container {
+  padding: 24px;
+  overflow-x: auto;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.loading-overlay,
+.empty-state {
+  text-align: center;
+  padding: 48px;
+  color: rgba(0, 0, 0, 0.54);
+  font-size: 16px;
+}

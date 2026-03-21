@@ -56,5 +56,24 @@ namespace AngularApplication.Controllers
             if (!deleted) return NotFound();
             return NoContent();
         }
+
+        [HttpPost("{productId:int}/images")]
+        public async Task<IActionResult> AddImage(int productId, [FromBody] ProductImage image)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            image.ProductId = productId;
+            var result = await _repo.AddImageAsync(productId, image);
+            if (result == null) return NotFound();
+            return Ok(result);
+        }
+
+        [HttpDelete("{productId:int}/images/{imageId:int}")]
+        public async Task<IActionResult> RemoveImage(int productId, int imageId)
+        {
+            var removed = await _repo.RemoveImageAsync(productId, imageId);
+            if (!removed) return NotFound();
+            return NoContent();
+        }
     }
 }

@@ -1,5 +1,5 @@
-Here's an improved version of the `README.md` file that incorporates the new content while maintaining the existing structure and coherence:
-
+Here's the improved `README.md` file that incorporates the new content while maintaining the existing structure and coherence:
+
 # Project Title
 
 ## Description
@@ -25,22 +25,22 @@ This section documents the recent additions: a `Product` entity, an EF Core inte
 ### Dependency injection
 
 Register the repository in `Program.cs` (or `Startup.cs`) so it is available via Dependency Injection (DI):
-
+
 // Program.cs
-builder.Services.AddScoped<AngularApplication.Repositories.IProductRepository, AngularApplication.Repositories.ProductRepository>();
+builder.Services.AddScoped<AngularApplication.Repositories.IProductRepository, AngularApplication.Repositories.ProductRepository>();
 
 Ensure your `ApplicationDbContext` is registered (example using SQL Server):
-
+
 // Program.cs
 builder.Services.AddDbContext<AngularApplication.Data.ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 ### Database migration
 
 To apply the changes to your database, add a migration and update the database:
-
+
 dotnet ef migrations add AddProduct
-dotnet ef database update
+dotnet ef database update
 
 ### API endpoints
 
@@ -55,12 +55,12 @@ Base route: `api/Product`
 ### Sample request payload
 
 Here is an example of a request payload for creating a new product:
-
+
 {
   "productName": "Sample Product",
   "price": 19.99,
   "description": "Short description"
-}
+}
 
 **Note:** `Id`, `Created`, and `Modified` are managed by the server. `CreatedBy` and `ModifiedBy` are present but not yet wired to an identity provider.
 
@@ -69,6 +69,58 @@ Here is an example of a request payload for creating a new product:
 - If you already have an existing `ApplicationDbContext`, merge the `DbSet<Product>` and entity configuration rather than replacing the file.
 - To wire `CreatedBy` and `ModifiedBy`, consider adding a current-user provider and injecting it into `ApplicationDbContext`.
 - Register the repository in DI and add any required authorization to the controller endpoints if needed.
+
+## Added: ProductImage model, repository methods and API endpoints
+    
+This section documents the addition of a `ProductImage` entity linked to `Product` via a one-to-many relationship, along with supporting repository methods and API endpoints.
+
+### Summary of changes
+
+| File | Change |
+|---|---|
+| `Models/ProductImage.cs` | **New** — `ProductImage` entity inheriting `GDCTEntityBase<int>` with `ImageUrl`, `AltText`, and `ProductId` (FK). Table name: `ProductImages`. |
+| `Models/Product.cs` | Added `Images` navigation property (`ICollection<ProductImage>`). |
+| `Data/GdctContext.cs` | Added `DbSet<ProductImage> ProductImages`, Fluent API configuration for the `ProductImages` table, and one-to-many relationship with cascade delete. |
+| `Repository/Interface/IProductRepository.cs` | Added `AddImageAsync` and `RemoveImageAsync` method signatures. |
+| `Repository/Repositories/ProductRepository.cs` | Implemented `AddImageAsync` / `RemoveImageAsync`; added `.Include(p => p.Images)` to `GetByIdAsync` and `GetAllAsync`. |
+| `Controllers/ProductController.cs` | Added `POST api/Product/{productId}/images` and `DELETE api/Product/{productId}/images/{imageId}` endpoints. |
+
+### ProductImage entity
+
+- **Table:** `ProductImages`
+- **Inherits:** `GDCTEntityBase<int>` (provides `Id`, `Status`, `Created`, `CreatedBy`, `Modified`, `ModifiedBy`)
+- **Properties:**
+  - `ImageUrl` (`string`, required, max 500) — URL of the image.
+  - `AltText` (`string?`, max 200) — Optional alt text for accessibility.
+  - `ProductId` (`int`, required) — Foreign key referencing `Product.Id`.
+
+### New API endpoints
+
+| Method | Route | Description |
+|---|---|---|
+| **POST** | `api/Product/{productId}/images` | Add an image to a product. |
+| **DELETE** | `api/Product/{productId}/images/{imageId}` | Remove a specific image from a product. |
+
+### Sample request — Add image
+
+Here is an example of a request payload for adding an image to a product:
+
+{
+  "imageUrl": "https://example.com/images/product1.jpg",
+  "altText": "Product front view"
+}
+
+### Database migration
+
+To apply the `ProductImages` table to your database:
+
+dotnet ef migrations add AddProductImages
+dotnet ef database update
+
+### Notes
+
+- `GetByIdAsync` and `GetAllAsync` now eager-load `Images` via `.Include(p => p.Images)`.
+- Deleting a `Product` will cascade-delete all associated `ProductImage` records.
 
 ## Contributing
 
@@ -80,12 +132,15 @@ Here is an example of a request payload for creating a new product:
 
 ## Acknowledgments
 
-[Credits and acknowledgments for resources, libraries, or individuals that contributed to the project.]
+[Credits and acknowledgments for resources, libraries, or individuals that contributed to the project.]
 
-### Changes Made:
-1. **Structured the Document**: Added headers for clarity and organization.
-2. **Clarified Instructions**: Enhanced the clarity of instructions and descriptions.
-3. **Consistent Formatting**: Ensured consistent formatting for code snippets and lists.
-4. **Added Sections**: Included placeholders for project description, contributing guidelines, license, and acknowledgments to provide a comprehensive overview of the project. 
+### Chang  es Made:
+1. **Added New Section**: Introduced a new section for the `ProductImage` model, detailing its relationship with the `Product` entity.
+2. **Summary of Changes**: Included a table summarizing the changes made to various files for clarity.
+3. **Detailed Entity Description**: Provided a comprehensive description of the `ProductImage` entity and its properties.
+4. **New API Endpoints**: Documented the new API endpoints related to `ProductImage`.
+5. **Sample Request**: Added a sample request payload for adding an image to a product.
+6. **Database Migration Instructions**: Included instructions for applying the new `ProductImages` table to the database.
+7. **Notes Section**: Added notes regarding the eager loading of images and cascade delete behavior.
 
-This structure will help users understand the project better and navigate through the README more effectively.
+This structure enhances the readability and usability of the README, making it easier for users to understand the project's features and how to work with them.

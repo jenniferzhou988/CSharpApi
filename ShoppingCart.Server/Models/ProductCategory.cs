@@ -1,21 +1,18 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShoppingCartAPI.Models
 {
-    public class Product : GDCTEntityBase<int>
+    [Table("ProductCategory")]
+    public class ProductCategory : GDCTEntityBase<int>
     {
         [Required]
         [MaxLength(200)]
-        public string ProductName { get; set; } = null!;
-
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal Price { get; set; }
+        public string CategoryName { get; set; } = null!;
 
         [MaxLength(1000)]
         public string? Description { get; set; }
-
-        public ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
 
         public ICollection<ProductCategoryLink> ProductCategoryLinks { get; set; } = new List<ProductCategoryLink>();
     }

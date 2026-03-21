@@ -1,6 +1,7 @@
-using AngularApplication.Models;
+
 using Microsoft.EntityFrameworkCore;
 using ShoppingCartAPI.Data;
+using ShoppingCartAPI.Models;
 using ShoppingCartAPI.Repository.Interface;
 
 namespace ShoppingCartAPI.Repository.Repositories
@@ -31,6 +32,8 @@ namespace ShoppingCartAPI.Repository.Repositories
             {
                 return await ctx.Products
                     .Include(p => p.Images)
+                    .Include(p => p.ProductCategoryLinks)
+                        .ThenInclude(l => l.ProductCategory)
                     .FirstOrDefaultAsync(p => p.Id == id);
             }
                 
@@ -42,6 +45,8 @@ namespace ShoppingCartAPI.Repository.Repositories
             {
                 return await ctx.Products
                     .Include(p => p.Images)
+                    .Include(p => p.ProductCategoryLinks)
+                        .ThenInclude(l => l.ProductCategory)
                     .AsNoTracking()
                     .ToListAsync();
             }
@@ -108,6 +113,50 @@ namespace ShoppingCartAPI.Repository.Repositories
                     return false;
 
                 ctx.ProductImages.Remove(image);
+                await ctx.SaveChangesAsync();
+                return true;
+            }
+        }
+
+        public async Task<ProductCategoryLink?> AddCategoryAsync(int productId, int categoryId)
+        {
+            using (var ctx = _dbcontextfactory.CreateDbContext())
+            {
+                var product = await ctx.Products.FindAsync(productId);
+                if (product == null)
+                    return null;
+
+                var category = await ctx.ProductCategories.FindAsync(categoryId);
+                if (category == null)
+                    return null;
+
+                var existingLink = await ctx.ProductCategoryLinks
+                    .FirstOrDefaultAsync(l => l.ProductId == productId && l.ProductCategoryId == categoryId);
+                if (existingLink != null)
+                    return existingLink;
+
+                var link = new ProductCategoryLink
+                {
+                    ProductId = productId,
+                    ProductCategoryId = categoryId
+                };
+
+                ctx.ProductCategoryLinks.Add(link);
+                await ctx.SaveChangesAsync();
+                return link;
+            }
+        }
+
+        public async Task<bool> RemoveCategoryAsync(int productId, int categoryId)
+        {
+            using (var ctx = _dbcontextfactory.CreateDbContext())
+            {
+                var link = await ctx.ProductCategoryLinks
+                    .FirstOrDefaultAsync(l => l.ProductId == productId && l.ProductCategoryId == categoryId);
+                if (link == null)
+                    return false;
+
+                ctx.ProductCategoryLinks.Remove(link);
                 await ctx.SaveChangesAsync();
                 return true;
             }

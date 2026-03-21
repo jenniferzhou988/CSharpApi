@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.VisualStudio.JavaScript.Sdk/1.0.1184077">
+  <PropertyGroup>
+    <StartupCommand>npm start</StartupCommand>
+    <JavaScriptTestRoot>src\</JavaScriptTestRoot>
+    <JavaScriptTestFramework>Jasmine</JavaScriptTestFramework>
+    <!-- Folder where production build output is placed -->
+    <BuildOutputFolder>$(MSBuildProjectDirectory)\dist\shopping-cart-client\</BuildOutputFolder>
+    <ShouldRunBuildScript>false</ShouldRunBuildScript>
+  </PropertyGroup>
+</Project>

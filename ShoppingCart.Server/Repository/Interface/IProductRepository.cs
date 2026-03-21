@@ -1,6 +1,4 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using AngularApplication.Models;
+using ShoppingCartAPI.Models;
 
 namespace ShoppingCartAPI.Repository.Interface
 {
@@ -13,5 +11,7 @@ namespace ShoppingCartAPI.Repository.Interface
         Task<bool> DeleteAsync(int id);
         Task<ProductImage?> AddImageAsync(int productId, ProductImage image);
         Task<bool> RemoveImageAsync(int productId, int imageId);
+        Task<ProductCategoryLink?> AddCategoryAsync(int productId, int categoryId);
+        Task<bool> RemoveCategoryAsync(int productId, int categoryId);
     }
 }

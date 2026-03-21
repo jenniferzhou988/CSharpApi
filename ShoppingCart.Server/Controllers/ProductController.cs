@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using AngularApplication.Models;
 using ShoppingCartAPI.Repository.Interface;
 namespace AngularApplication.Controllers
 {
@@ -72,6 +71,22 @@ namespace AngularApplication.Controllers
         public async Task<IActionResult> RemoveImage(int productId, int imageId)
         {
             var removed = await _repo.RemoveImageAsync(productId, imageId);
+            if (!removed) return NotFound();
+            return NoContent();
+        }
+
+        [HttpPost("{productId:int}/categories/{categoryId:int}")]
+        public async Task<IActionResult> AddCategory(int productId, int categoryId)
+        {
+            var result = await _repo.AddCategoryAsync(productId, categoryId);
+            if (result == null) return NotFound();
+            return Ok(result);
+        }
+
+        [HttpDelete("{productId:int}/categories/{categoryId:int}")]
+        public async Task<IActionResult> RemoveCategory(int productId, int categoryId)
+        {
+            var removed = await _repo.RemoveCategoryAsync(productId, categoryId);
             if (!removed) return NotFound();
             return NoContent();
         }

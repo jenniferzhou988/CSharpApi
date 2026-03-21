@@ -1,5 +1,4 @@
-﻿using AngularApplication.Models;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ShoppingCartAPI.Models;
 
 namespace ShoppingCartAPI.Data;
@@ -14,6 +13,8 @@ public partial class GdctContext(DbContextOptions<GdctContext> options) : DbCont
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public virtual  DbSet<Product> Products { get; set; } = null!;
     public virtual DbSet<ProductImage> ProductImages { get; set; } = null!;
+    public virtual DbSet<ProductCategory> ProductCategories { get; set; } = null!;
+    public virtual DbSet<ProductCategoryLink> ProductCategoryLinks { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -32,6 +33,24 @@ public partial class GdctContext(DbContextOptions<GdctContext> options) : DbCont
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_UserInfo_UserRole");
 
+        });
+
+        modelBuilder.Entity<ProductCategory>(entity => {
+            entity.ToTable("ProductCategory");
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.Id).ValueGeneratedOnAdd();
+            entity.Property(c => c.CategoryName)
+                   .IsRequired()
+                   .HasMaxLength(200);
+            entity.Property(c => c.Description)
+                   .HasMaxLength(1000);
+            entity.Property(c => c.Created)
+                   .IsRequired();
+            entity.Property(c => c.CreatedBy)
+                   .HasMaxLength(256);
+            entity.Property(c => c.Modified);
+            entity.Property(c => c.ModifiedBy)
+                   .HasMaxLength(256);
         });
 
         modelBuilder.Entity<Product>(entity => {
@@ -56,6 +75,32 @@ public partial class GdctContext(DbContextOptions<GdctContext> options) : DbCont
             entity.HasMany(p => p.Images)
                    .WithOne(i => i.Product)
                    .HasForeignKey(i => i.ProductId)
+                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ProductCategoryLink>(entity => {
+            entity.ToTable("ProductCategoryLink");
+            entity.HasKey(l => l.Id);
+            entity.Property(l => l.Id).ValueGeneratedOnAdd();
+            entity.Property(l => l.Created)
+                   .IsRequired();
+            entity.Property(l => l.CreatedBy)
+                   .HasMaxLength(256);
+            entity.Property(l => l.Modified);
+            entity.Property(l => l.ModifiedBy)
+                   .HasMaxLength(256);
+
+            entity.HasIndex(l => new { l.ProductId, l.ProductCategoryId })
+                   .IsUnique();
+
+            entity.HasOne(l => l.Product)
+                   .WithMany(p => p.ProductCategoryLinks)
+                   .HasForeignKey(l => l.ProductId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(l => l.ProductCategory)
+                   .WithMany(c => c.ProductCategoryLinks)
+                   .HasForeignKey(l => l.ProductCategoryId)
                    .OnDelete(DeleteBehavior.Cascade);
         });
 

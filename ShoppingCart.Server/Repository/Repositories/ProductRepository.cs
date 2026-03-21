@@ -1,60 +1,81 @@
-using Microsoft.EntityFrameworkCore;
-using AngularApplication.Data;
 using AngularApplication.Models;
+using Microsoft.EntityFrameworkCore;
+using ShoppingCartAPI.Data;
 using ShoppingCartAPI.Repository.Interface;
 
 namespace ShoppingCartAPI.Repository.Repositories
 {
-    public class ProductRepository : IProductRepository
+    public class ProductRepository : GDCTRepository<Product>,IProductRepository
     {
-        private readonly ApplicationDbContext _db;
+       // private readonly ApplicationDbContext _db;
 
-        public ProductRepository(ApplicationDbContext db)
+        public ProductRepository(IDbContextFactory<GdctContext> dbcontextfactory, IAppLogger<Product> logger) : base(dbcontextfactory, logger)
         {
-            _db = db;
+         //   _db = db;
         }
 
         public async Task<Product> CreateAsync(Product product)
         {
-            _db.Products.Add(product);
-            await _db.SaveChangesAsync();
-            return product;
+            using (var ctx = _dbcontextfactory.CreateDbContext())
+            {
+                ctx.Products.Add(product);
+                await ctx.SaveChangesAsync();
+                return product;
+            }
+            
         }
 
         public async Task<Product?> GetByIdAsync(int id)
         {
-            return await _db.Products.FindAsync(id);
+            using (var ctx = _dbcontextfactory.CreateDbContext())
+            {
+                return await ctx.Products.FindAsync(id);
+            }
+                
         }
 
         public async Task<IEnumerable<Product>> GetAllAsync()
         {
-            return await _db.Products.AsNoTracking().ToListAsync();
+            using (var ctx = _dbcontextfactory.CreateDbContext())
+            {
+                return await ctx.Products.AsNoTracking().ToListAsync();
+            }
+             
         }
 
         public async Task<Product?> UpdateAsync(Product product)
         {
-            var existing = await _db.Products.FindAsync(product.Id);
-            if (existing == null)
-                return null;
+            using (var ctx = _dbcontextfactory.CreateDbContext())
+            {
+                var existing = await ctx.Products.FindAsync(product.Id);
+                if (existing == null)
+                    return null;
 
-            existing.ProductName = product.ProductName;
-            existing.Price = product.Price;
-            existing.Description = product.Description;
-            // Modified and ModifiedBy are handled by ApplicationDbContext.ApplyAuditInformation/save pipeline
-            _db.Products.Update(existing);
-            await _db.SaveChangesAsync();
-            return existing;
+                existing.ProductName = product.ProductName;
+                existing.Price = product.Price;
+                existing.Description = product.Description;
+                // Modified and ModifiedBy are handled by ApplicationDbContext.ApplyAuditInformation/save pipeline
+                ctx.Products.Update(existing);
+                await ctx.SaveChangesAsync();
+                return existing;
+            }
+                
         }
 
         public async Task<bool> DeleteAsync(int id)
         {
-            var existing = await _db.Products.FindAsync(id);
-            if (existing == null)
-                return false;
+            using (var ctx = _dbcontextfactory.CreateDbContext())
+            {
+                var existing = await ctx.Products.FindAsync(id);
+                if (existing == null)
+                    return false;
 
-            _db.Products.Remove(existing);
-            await _db.SaveChangesAsync();
-            return true;
+                ctx.Products.Remove(existing);
+                await ctx.SaveChangesAsync();
+                return true;
+
+            }
+                
         }
     }
 }

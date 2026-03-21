@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using AngularApplication.Models;
+using Microsoft.EntityFrameworkCore;
 using ShoppingCartAPI.Models;
 
 namespace ShoppingCartAPI.Data;
@@ -11,6 +12,8 @@ public partial class GdctContext(DbContextOptions<GdctContext> options) : DbCont
 
     public virtual DbSet<AppConfig> AppConfigs { get; set; }
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public virtual  DbSet<Product> Products { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
 
@@ -27,6 +30,28 @@ public partial class GdctContext(DbContextOptions<GdctContext> options) : DbCont
                 .HasForeignKey(d => d.UserRoleId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_UserInfo_UserRole");
+
+        });
+
+        modelBuilder.Entity<Product>(entity => {
+            entity.ToTable("Products");
+            entity.HasKey(p => p.Id);
+            entity.Property(p => p.Id).ValueGeneratedOnAdd();
+            entity.Property(p => p.ProductName)
+                   .IsRequired()
+                   .HasMaxLength(200);
+            entity.Property(p => p.Price)
+                   .HasColumnType("decimal(18,2)");
+            entity.Property(p => p.Description)
+                   .HasMaxLength(1000);
+            entity.Property(p => p.Created)
+                   .IsRequired();
+            entity.Property(p => p.CreatedBy)
+                   .HasMaxLength(256);
+            entity.Property(p => p.Modified);
+            entity.Property(p => p.ModifiedBy)
+                   .HasMaxLength(256);
+
         });
 
         modelBuilder.Entity<RefreshToken>()

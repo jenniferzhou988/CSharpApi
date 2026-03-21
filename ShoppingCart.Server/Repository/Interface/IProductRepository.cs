@@ -13,5 +13,6 @@ namespace ShoppingCartAPI.Repository.Interface
         Task<bool> RemoveImageAsync(int productId, int imageId);
         Task<ProductCategoryLink?> AddCategoryAsync(int productId, int categoryId);
         Task<bool> RemoveCategoryAsync(int productId, int categoryId);
+        Task<ProductImportRecord?> ImportProductAsync(int productId, decimal importPrice, int quantity, string? comment);
     }
 }

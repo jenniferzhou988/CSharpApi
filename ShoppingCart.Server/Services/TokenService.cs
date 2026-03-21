@@ -55,10 +55,10 @@ namespace ShoppingCartAPI.Services
             };
 
             var expireAt = DateTime.UtcNow.AddMinutes(_opt.AccessTokenMinutes);
-           // if (user.UserRoleId != 0)
-           // {
-           //    claims.Add(new Claim(ClaimTypes.Role, user.UserRole.RoleName));
-           // }
+            foreach(var role in user.Roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role?.RoleName??""));
+            }
             var token = new JwtSecurityToken(
                 issuer: _opt.Issuer,
                 audience: _opt.Audience,

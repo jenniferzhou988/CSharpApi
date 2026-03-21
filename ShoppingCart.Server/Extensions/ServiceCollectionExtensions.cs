@@ -21,6 +21,7 @@ namespace ShoppingCartAPI.Extensions
 
             services.Configure<JwtOptions>(config.GetSection("Jwt"));
             services.AddScoped<ITokenService, TokenService>();
+            services.AddSingleton<IEncryptionService, AesEncryptionService>();
 
             // JWT Bearer
             var jwt = config.GetSection("Jwt").Get<JwtOptions>()!;

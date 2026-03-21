@@ -12,12 +12,10 @@ public partial class User : GDCTEntityBase<int>
     public string? PasswordHash { get; set; }    
     public string? Email { get; set; } 
 
-    public int UserRoleId { get; set; }
-
-    public int? OrgId { get; set; }
-
-    public virtual UserRole? UserRole { get; set; }
     public List<RefreshToken> RefreshTokens { get; set; } = new();
 
+    public virtual ICollection<Role> Roles { get; set; } = new List<Role>();
+    public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
 
+    public UserCustomerLink? UserCustomerLink { get; set; }
 }

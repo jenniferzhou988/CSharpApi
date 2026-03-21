@@ -36,19 +36,19 @@ public partial class GdctContext : DbContext
     public virtual DbSet<ShoppingCartDetail> ShoppingCartDetails { get; set; } = null!;
     public virtual DbSet<ProductImportRecord> ProductImportRecords { get; set; } = null!;
     public virtual DbSet<ProductInventory> ProductInventories { get; set; } = null!;
-        public virtual DbSet<Order> Orders { get; set; } = null!;
+    public virtual DbSet<Order> Orders { get; set; } = null!;
     public virtual DbSet<OrderDetail> OrderDetails { get; set; } = null!;
-        public virtual DbSet<ShippingServiceProvider> ShippingServiceProviders { get; set; } = null!;
+    public virtual DbSet<ShippingServiceProvider> ShippingServiceProviders { get; set; } = null!;
     public virtual DbSet<ShippingTracking> ShippingTrackings { get; set; } = null!;
     public virtual DbSet<ShippingItemDetail> ShippingItemDetails { get; set; } = null!;
-        public virtual DbSet<UserRole> UserRoles { get; set; } = null!;
+    public virtual DbSet<UserRole> UserRoles { get; set; } = null!;
     public virtual DbSet<UserCustomerLink> UserCustomerLinks { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
 
         modelBuilder.Entity<User>(entity =>
-        {`
+        {
             entity.ToTable("Users");
 
             entity.Property(e => e.Email).HasMaxLength(50);

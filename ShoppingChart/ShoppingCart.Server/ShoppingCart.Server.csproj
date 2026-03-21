@@ -4,7 +4,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <SpaRoot>..\ShoppingCartAPI.client</SpaRoot>
+    <SpaRoot>..\ShoppingCart.Client</SpaRoot>
     <SpaProxyLaunchCommand>npm start</SpaProxyLaunchCommand>
     <SpaProxyServerUrl>https://localhost:53109</SpaProxyServerUrl>
     <UserSecretsId>26830b24-d393-4977-83ec-f169c50c6368</UserSecretsId>
@@ -34,6 +34,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ShoppingCartAPI.client\ShoppingCartAPI.client.esproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ShoppingCart.Client\ShoppingCart.Client.esproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>

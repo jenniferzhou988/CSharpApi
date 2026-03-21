@@ -270,3 +270,6 @@ users.MapGet("/me", async (HttpContext http, GdctContext db) =>
 
 
 app.Run();
+
+// Expose entry point for integration tests (WebApplicationFactory<Program>)
+public partial class Program { }

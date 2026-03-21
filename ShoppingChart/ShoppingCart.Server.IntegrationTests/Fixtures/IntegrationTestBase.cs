@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using ShoppingCartAPI.Data;
 using ShoppingCartAPI.Models;
+using Xunit;
 
 namespace ShoppingCart.Server.IntegrationTests.Fixtures;
 

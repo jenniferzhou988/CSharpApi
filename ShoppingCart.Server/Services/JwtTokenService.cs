@@ -38,9 +38,9 @@ namespace ShoppingCartAPI.Services
             new("FullName",user.FullName??string.Empty),
         };
             
-            if (user.UserRoleId != 0)
+            foreach (var role in user.Roles)
             {
-                claims.Add(new Claim(ClaimTypes.Role, user.UserRole.RoleName));
+                claims.Add(new Claim(ClaimTypes.Role,role.RoleName??""));
             }
 
             var jwt = new JwtSecurityToken(

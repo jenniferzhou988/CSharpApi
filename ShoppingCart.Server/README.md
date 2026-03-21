@@ -1,222 +1,184 @@
-﻿Here's the improved `README.md` file that incorporates the new content regarding the `ProductCategory` entity and the `ProductCategoryLink` join entity while maintaining the existing structure and coherence:
+# ShoppingCart API (ASP.NET Core 9)
 
-# Project Title
+This project is a .NET 9 Web API for authentication, product catalog management, shopping carts, orders, shipping tracking, and user profile access.
 
-## Description
+## Tech Stack
 
-[Provide a brief description of the project, its purpose, and any relevant information.]
+- ASP.NET Core Web API (`net9.0`)
+- Entity Framework Core + SQL Server
+- JWT authentication + refresh token rotation
+- Swagger/OpenAPI
+- BCrypt password hashing
 
-## Getting Started
+## Project Structure
 
-[Instructions on how to get the project up and running locally.]
+```text
+ShoppingCart.Server/
+|-- Contracts/                 # API request/response DTOs
+|-- Controllers/               # REST API controllers
+|-- Data/                      # DbContext and data access infrastructure
+|-- Extensions/                # Service registration extensions
+|-- Models/                    # Domain entities and base model types
+|-- Properties/                # launchSettings and runtime profiles
+|-- Repository/
+|   |-- Interface/             # Repository contracts
+|   `-- Repositories/          # Repository implementations
+|-- Services/                  # Business and security services (token, encryption)
+|-- Utils/                     # Utility helpers
+|-- Program.cs                 # Application entry point and middleware pipeline
+|-- appsettings.json           # Shared configuration
+|-- appsettings.Development.json
+|-- ShoppingCartApi.csproj     # Project file
+`-- ShoppingCartApi.sln        # Solution file
+```
 
-## Added: Product model, repository and API
+Folder responsibilities:
 
-This section documents the recent additions: a `Product` entity, an EF Core integration, a repository, and an API controller.
+- `Controllers`: Defines API routes and HTTP behaviors.
+- `Repository`: Encapsulates data access and aggregate loading patterns.
+- `Models`: Represents database entities and relationships used by EF Core.
+- `Data`: Central EF Core mapping in `GdctContext` and supporting converters.
+- `Services`: Authentication/token and encryption services.
+- `Contracts`: External API input/output contracts used by controllers.
 
-### Files added / updated
+## API Overview
 
-- `Models/Product.cs` — `Product` entity with fields: `Id` (auto-increment), `ProductName`, `Price`, `Description`, `Created`, `CreatedBy`, `Modified`, `ModifiedBy`.
-- `Data/ApplicationDbContext.cs` — exposes `DbSet<Product> Products`, configures the entity and applies automatic `Created`/`Modified` timestamps in `SaveChanges`.
-- `Repositories/IProductRepository.cs` — repository interface (async CRUD).
-- `Repositories/ProductRepository.cs` — EF Core repository implementation.
-- `Controllers/ProductController.cs` — Web API controller exposing CRUD endpoints.
+Base URL in local development is typically:
 
-### Dependency injection
+- `https://localhost:<port>`
 
-Register the repository in `Program.cs` (or `Startup.cs`) so it is available via Dependency Injection (DI):
+Swagger UI is enabled:
 
-// Program.cs
-builder.Services.AddScoped<AngularApplication.Repositories.IProductRepository, AngularApplication.Repositories.ProductRepository>();
+- `GET /swagger`
 
-Ensure your `ApplicationDbContext` is registered (example using SQL Server):
+Health endpoint:
 
-// Program.cs
-builder.Services.AddDbContext<AngularApplication.Data.ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+- `GET /health`
 
-### Database migration
+### API Controllers
 
-To apply the changes to your database, add a migration and update the database:
+| Controller | Base Route | Endpoints | Notes |
+|---|---|---|---|
+| AuthController | `/api/Auth` | `POST /register`<br>`POST /login`<br>`POST /refresh`<br>`POST /logout`<br>`POST /logout-all` | Registration, login, refresh-token rotation, logout actions |
+| ProfileController | `/api/Profile` | `GET /me` | Authorized endpoint to read current user profile |
+| ProductController | `/api/Product` | `GET /`<br>`GET /{id}`<br>`POST /`<br>`PUT /{id}`<br>`DELETE /{id}`<br>`POST /{productId}/images`<br>`DELETE /{productId}/images/{imageId}`<br>`POST /{productId}/categories/{categoryId}`<br>`DELETE /{productId}/categories/{categoryId}`<br>`POST /{productId}/import` | Product CRUD, image and category linking, inventory import |
+| ShoppingCartController | `/api/ShoppingCart` | `GET /`<br>`GET /{id}`<br>`POST /`<br>`DELETE /{id}`<br>`POST /{shoppingCartId}/items`<br>`PUT /{shoppingCartId}/items/{detailId}`<br>`DELETE /{shoppingCartId}/items/{detailId}` | Cart CRUD and line-item management |
+| OrderController | `/api/Order` | `GET /`<br>`GET /{id}`<br>`POST /` | Creates orders from customer, card, address, and item list |
+| ShippingTrackingController | `/api/ShippingTracking` | `GET /`<br>`GET /{id}`<br>`POST /` | Creates and tracks shipping with provider + tracking number |
+| WeatherForecastController | `/WeatherForecast` | `GET /` | Sample/demo endpoint |
 
-dotnet ef migrations add AddProduct
-dotnet ef database update
+## Database Entities
 
-### API endpoints
+All entities are managed through `GdctContext` and most inherit common audit/status fields from `GDCTEntityBase<TId>`:
 
-Base route: `api/Product`
+- `Id`, `Status`, `CreatedBy`, `Created`, `ModifiedBy`, `Modified`
 
-- **GET** `api/Product` — Retrieve all products.
-- **GET** `api/Product/{id}` — Retrieve a product by its ID.
-- **POST** `api/Product` — Create a new product (returns `201 Created`).
-- **PUT** `api/Product/{id}` — Update an existing product (returns `200 OK`).
-- **DELETE** `api/Product/{id}` — Delete a product (returns `204 No Content`).
+Primary entities in this API:
 
-### Sample request payload
-
-Here is an example of a request payload for creating a new product:
-
-{
-  "productName": "Sample Product",
-  "price": 19.99,
-  "description": "Short description"
-}
-
-**Note:** `Id`, `Created`, and `Modified` are managed by the server. `CreatedBy` and `ModifiedBy` are present but not yet wired to an identity provider.
-
-### Notes & next steps
-
-- If you already have an existing `ApplicationDbContext`, merge the `DbSet<Product>` and entity configuration rather than replacing the file.
-- To wire `CreatedBy` and `ModifiedBy`, consider adding a current-user provider and injecting it into `ApplicationDbContext`.
-- Register the repository in DI and add any required authorization to the controller endpoints if needed.
-
-## Added: ProductImage model, repository methods and API endpoints
-
-This section documents the addition of a `ProductImage` entity linked to `Product` via a one-to-many relationship, along with supporting repository methods and API endpoints.
-
-### Summary of changes
-
-| File | Change |
+| Domain | Entities |
 |---|---|
-| `Models/ProductImage.cs` | **New** — `ProductImage` entity inheriting `GDCTEntityBase<int>` with `ImageUrl`, `AltText`, and `ProductId` (FK). Table name: `ProductImages`. |
-| `Models/Product.cs` | Added `Images` navigation property (`ICollection<ProductImage>`). |
-| `Data/GdctContext.cs` | Added `DbSet<ProductImage> ProductImages`, Fluent API configuration for the `ProductImages` table, and one-to-many relationship with cascade delete. |
-| `Repository/Interface/IProductRepository.cs` | Added `AddImageAsync` and `RemoveImageAsync` method signatures. |
-| `Repository/Repositories/ProductRepository.cs` | Implemented `AddImageAsync` / `RemoveImageAsync`; added `.Include(p => p.Images)` to `GetByIdAsync` and `GetAllAsync`. |
-| `Controllers/ProductController.cs` | Added `POST api/Product/{productId}/images` and `DELETE api/Product/{productId}/images/{imageId}` endpoints. |
+| Identity and access | `User`, `Role`, `UserRole`, `RefreshToken`, `UserCustomerLink` |
+| Customer profile | `Customer`, `Address`, `AddressType`, `CustomerAddressLink` |
+| Payments | `BillingMethod`, `BankCardInfo`, `CustomerBillingCardLink` |
+| Catalog | `Product`, `ProductImage`, `ProductCategory`, `ProductCategoryLink`, `ProductImportRecord`, `ProductInventory` |
+| Cart and ordering | `ShoppingCart`, `ShoppingCartDetail`, `Order`, `OrderDetail`, `OrderStatus` |
+| Shipping | `ShippingServiceProvider`, `ShippingTracking`, `ShippingItemDetail` |
+| Configuration | `AppConfig` |
 
-### ProductImage entity
+## Entity Relationships
 
-- **Table:** `ProductImages`
-- **Inherits:** `GDCTEntityBase<int>` (provides `Id`, `Status`, `Created`, `CreatedBy`, `Modified`, `ModifiedBy`)
-- **Properties:**
-  - `ImageUrl` (`string`, required, max 500) — URL of the image.
-  - `AltText` (`string?`, max 200) — Optional alt text for accessibility.
-  - `ProductId` (`int`, required) — Foreign key referencing `Product.Id`.
+| Domain | Source Entity | Cardinality | Target Entity | Notes |
+|---|---|---|---|---|
+| Identity | `User` | 1..* | `RefreshToken` | One user can own multiple refresh tokens |
+| Identity | `User` | *..* | `Role` | Implemented through `UserRole` |
+| Identity | `User` | 1..1 | `UserCustomerLink` | One-to-one link row |
+| Identity | `Customer` | 1..1 | `UserCustomerLink` | One customer linked to one user |
+| Customer and addresses | `Customer` | 1..* | `CustomerAddressLink` | Customer can store multiple addresses |
+| Customer and addresses | `Address` | 1..* | `CustomerAddressLink` | Address can be referenced by link rows |
+| Customer and addresses | `AddressType` | 1..* | `CustomerAddressLink` | Billing/Shipping role of address |
+| Payments | `BillingMethod` | 1..* | `BankCardInfo` | Card belongs to one billing method |
+| Payments | `Customer` | 1..* | `CustomerBillingCardLink` | Customer can own multiple saved cards |
+| Payments | `BankCardInfo` | 1..* | `CustomerBillingCardLink` | Card can be referenced by link rows |
+| Product catalog | `Product` | 1..* | `ProductImage` | Product media |
+| Product catalog | `Product` | *..* | `ProductCategory` | Implemented through `ProductCategoryLink` |
+| Product catalog | `Product` | 1..* | `ProductImportRecord` | Inventory import history |
+| Product catalog | `Product` | 1..* | `ProductInventory` | Inventory snapshots/adjustments |
+| Shopping and orders | `Customer` | 1..* | `ShoppingCart` | Customer carts |
+| Shopping and orders | `ShoppingCart` | 1..* | `ShoppingCartDetail` | Cart line items |
+| Shopping and orders | `Product` | 1..* | `ShoppingCartDetail` | Product appears in cart details |
+| Shopping and orders | `Customer` | 1..* | `Order` | Customer orders |
+| Shopping and orders | `OrderStatus` | 1..* | `Order` | Current order state |
+| Shopping and orders | `Order` | 1..* | `OrderDetail` | Order line items |
+| Shopping and orders | `Product` | 1..* | `OrderDetail` | Product appears in order details |
+| Shipping | `ShippingServiceProvider` | 1..* | `ShippingTracking` | Provider tracking records |
+| Shipping | `OrderDetail` | 1..1 | `ShippingItemDetail` | One shipping detail per order detail |
 
-### New API endpoints
+## Onboarding
 
-| Method | Route | Description |
-|---|---|---|
-| **POST** | `api/Product/{productId}/images` | Add an image to a product. |
-| **DELETE** | `api/Product/{productId}/images/{imageId}` | Remove a specific image from a product. |
+### 1) Prerequisites
 
-### Sample request — Add image
+- .NET SDK 9.x
+- SQL Server instance
+- (Optional) Angular client project if using SPA proxy
 
-Here is an example of a request payload for adding an image to a product:
+### 2) Configure app settings
 
-{
-  "imageUrl": "https://example.com/images/product1.jpg",
-  "altText": "Product front view"
-}
+Update `appsettings.json` values before running:
 
-### Database migration
+- `ConnectionStrings:GDCTConnection`
+- `Jwt:Issuer`
+- `Jwt:Audience`
+- `Jwt:SigningKey`
+- `Jwt:AccessTokenMinutes`
+- `Jwt:RefreshTokenDays`
+- `Encryption:Key`
+- `UseCookiesForRefreshToken`
+- `Cors:AllowedOrigins`
 
-To apply the `ProductImages` table to your database:
+Recommended:
 
-dotnet ef migrations add AddProductImages
+- Move secrets (connection strings, JWT signing key, encryption key) to user secrets or environment variables for non-local use.
+
+### 3) Restore and run
+
+```bash
+dotnet restore
+dotnet build
+dotnet run
+```
+
+### 4) Verify startup
+
+- Open Swagger: `https://localhost:<port>/swagger`
+- Health check: `https://localhost:<port>/health`
+
+### 5) First-time API flow
+
+1. Register user: `POST /api/Auth/register`
+2. Login: `POST /api/Auth/login`
+3. Copy `accessToken`
+4. In Swagger, click **Authorize** and set `Bearer <accessToken>`
+5. Call `GET /api/Profile/me`
+
+### 6) Database setup notes
+
+- The project uses EF Core model configuration in `Data/GdctContext.cs`.
+- If migrations are introduced, apply them with:
+
+```bash
 dotnet ef database update
+```
 
-### Notes
+If you do not use migrations, ensure the target database schema is created to match the current model.
 
-- `GetByIdAsync` and `GetAllAsync` now eager-load `Images` via `.Include(p => p.Images)`.
-- Deleting a `Product` will cascade-delete all associated `ProductImage` records.
+## Seed Data Notes
 
-## Added: ProductCategory entity and EF Core configuration
+The model includes seeded records for some lookup/reference tables, including:
 
-This section documents the addition of a `ProductCategory` entity linked to `Product` via a one-to-many relationship, along with the corresponding EF Core Fluent API configuration.
+- `Role`
+- `AddressType`
+- `OrderStatus`
+- `BillingMethod`
+- `ProductCategory`
 
-### Summary of changes
-
-| File | Change |
-|---|---|
-| `Models/ProductCategory.cs` | **New** — `ProductCategory` entity inheriting `GDCTEntityBase<int>` with `CategoryName`, `Description`, and `Products` navigation collection. Table: `ProductCategory`. |
-| `Data/GdctContext.cs` | Added `DbSet<ProductCategory> ProductCategories`, Fluent API configuration for the `ProductCategory` table, and one-to-many relationship (`ProductCategory` → `Product`) with `DeleteBehavior.SetNull`. |
-
-### ProductCategory entity
-
-- **Table:** `ProductCategory`
-- **Inherits:** `GDCTEntityBase<int>` (provides `Id`, `Status`, `Created`, `CreatedBy`, `Modified`, `ModifiedBy`)
-- **Properties:**
-  - `CategoryName` (`string`, required, max 200) — Name of the category.
-  - `Description` (`string?`, max 1000) — Optional category description.
-  - `Products` (`ICollection<Product>`) — Navigation collection of products in this category.
-
-### Relationship details
-
-- **Type:** One-to-many (`ProductCategory` → `Product`)
-- **Foreign key:** `Product.ProductCategoryId` (nullable `int?`)
-- **Delete behavior:** `SetNull` — deleting a category sets `ProductCategoryId` to `null` on related products rather than cascade-deleting them.
-- `ProductCategoryId` is nullable so existing products are not required to have a category assigned.
-
-### Database migration
-
-To apply the `ProductCategory` table to your database:
-
-dotnet ef migrations add AddProductCategory
-dotnet ef database update
-
-## Added: ProductCategoryLink join entity and category management endpoints
-
-This section documents the addition of a `ProductCategoryLink` join entity that establishes a many-to-many relationship between `Product` and `ProductCategory`, along with repository methods and API endpoints to add or remove categories from a product.
-
-### Summary of changes
-
-| File | Change |
-|---|---|
-| `Models/ProductCategoryLink.cs` | **New** — Join entity inheriting `GDCTEntityBase<int>` with `ProductId` (FK) and `ProductCategoryId` (FK). Table: `ProductCategoryLink`. |
-| `Models/Product.cs` | Removed direct `ProductCategoryId` / `ProductCategory` FK. Added `ProductCategoryLinks` navigation collection. |
-| `Models/ProductCategory.cs` | Replaced `Products` navigation with `ProductCategoryLinks` navigation collection. |
-| `Data/GdctContext.cs` | Added `DbSet<ProductCategoryLink> ProductCategoryLinks`. Added Fluent API config with unique composite index on `(ProductId, ProductCategoryId)` and two one-to-many relationships with cascade delete. Removed old direct `ProductCategory` → `Product` relationship. |
-| `Repository/Interface/IProductRepository.cs` | Added `AddCategoryAsync(int productId, int categoryId)` and `RemoveCategoryAsync(int productId, int categoryId)` method signatures. |
-| `Repository/Repositories/ProductRepository.cs` | Implemented `AddCategoryAsync` (validates product & category, prevents duplicates) and `RemoveCategoryAsync`. Added `.Include(p => p.ProductCategoryLinks).ThenInclude(l => l.ProductCategory)` to `GetByIdAsync` and `GetAllAsync`. |
-| `Controllers/ProductController.cs` | Added `POST api/Product/{productId}/categories/{categoryId}` and `DELETE api/Product/{productId}/categories/{categoryId}` endpoints. |
-
-### ProductCategoryLink entity
-
-- **Table:** `ProductCategoryLink`
-- **Inherits:** `GDCTEntityBase<int>` (provides `Id`, `Status`, `Created`, `CreatedBy`, `Modified`, `ModifiedBy`)
-- **Properties:**
-  - `ProductId` (`int`, required) — Foreign key referencing `Product.Id`.
-  - `ProductCategoryId` (`int`, required) — Foreign key referencing `ProductCategory.Id`.
-  - `Product` — Navigation property to `Product`.
-  - `ProductCategory` — Navigation property to `ProductCategory`.
-
-### Relationship details
-
-- **Type:** Many-to-many via explicit join entity (`Product` ↔ `ProductCategoryLink` ↔ `ProductCategory`)
-- **Unique composite index** on `(ProductId, ProductCategoryId)` prevents duplicate links.
-- **Delete behavior:** Cascade on both FKs — deleting a `Product` or `ProductCategory` removes the associated link rows.
-- A product can belong to **multiple categories**, and a category can contain **multiple products**.
-
-### New API endpoints
-
-| Method | Route | Description |
-|---|---|---|
-| **POST** | `api/Product/{productId}/categories/{categoryId}` | Add a category to a product (idempotent — returns existing link if already assigned). |
-| **DELETE** | `api/Product/{productId}/categories/{categoryId}` | Remove a category from a product. |
-
-### Key behaviors
-
-- **`AddCategoryAsync`** — Validates both product and category exist; returns the existing link if already present (idempotent); returns `null` if either entity is not found.
-- **`RemoveCategoryAsync`** — Finds the link by `ProductId` + `ProductCategoryId` and removes it; returns `false` if link doesn't exist.
-- **`GetByIdAsync` / `GetAllAsync`** — Eager-load `ProductCategoryLinks` with `.ThenInclude(l => l.ProductCategory)` so category details are included in API responses.
-
-### Database migration
-
-To apply the `ProductCategoryLink` table to your database:
-
-dotnet ef migrations add AddProductCategoryLink
-dotnet ef database update
-
-## Contributing
-
-[Instructions for contributing to the project.]
-
-## License
-
-[Information about the project's license.]
-
-## Acknowledgments
-
-[Credits and acknowledgments for resources, libraries, or individuals that contributed to the project.]
+This helps bootstrap core workflow data for local testing.

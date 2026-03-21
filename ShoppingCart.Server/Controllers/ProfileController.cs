@@ -34,7 +34,6 @@ namespace ShoppingCartAPI.Controllers
                     FirstName = u.FirstName,
                     LastName = u.LastName,
                     FullName = u.FullName,
-                    UserRole = u.UserRole,
                     Created = u.Created
                 }).FirstOrDefault();
                 //.Select(u => new { u.Id, u.Email, u.FirstName, u.LastName, u.FullName,  u.Created })

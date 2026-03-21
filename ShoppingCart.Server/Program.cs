@@ -6,6 +6,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using ShoppingCartAPI.Data;
 using ShoppingCartAPI.Models;
+using ShoppingCartAPI.Repository.Interface;
+using ShoppingCartAPI.Repository.Repositories;
 using ShoppingCartAPI.Services;
 using System.Text;
 
@@ -68,6 +70,11 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 //builder.Services.AddSingleton<JwtTokenService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IAddressRepository, AddressRepository>();
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+builder.Services.AddScoped<IShoppingCartRepository, ShoppingCartRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IShippingTrackingRepository, ShippingTrackingRepository>();
 
 // 1) Add CORS
 builder.Services.AddCors(opts =>

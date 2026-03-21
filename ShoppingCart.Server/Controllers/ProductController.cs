@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using ShoppingCartAPI.Models;
 using ShoppingCartAPI.Repository.Interface;
-namespace AngularApplication.Controllers
+
+namespace ShoppingCartAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -91,5 +92,22 @@ namespace AngularApplication.Controllers
             if (!removed) return NotFound();
             return NoContent();
         }
+
+        [HttpPost("{productId:int}/import")]
+        public async Task<IActionResult> ImportProduct(int productId, [FromBody] ImportProductRequest request)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            var result = await _repo.ImportProductAsync(productId, request.ImportPrice, request.Quantity, request.Comment);
+            if (result == null) return NotFound();
+            return Ok(result);
+        }
+    }
+
+    public class ImportProductRequest
+    {
+        public decimal ImportPrice { get; set; }
+        public int Quantity { get; set; }
+        public string? Comment { get; set; }
     }
 }

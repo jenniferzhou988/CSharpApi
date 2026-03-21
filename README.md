@@ -1,222 +1,184 @@
-﻿# ShoppingCart API
+# ShoppingCart API (ASP.NET Core 9)
 
-A **.NET 9** Web API powering a shopping cart application with JWT authentication, product catalog management, and Entity Framework Core backed by SQL Server.
-
-**Repository:** [https://github.com/jenniferzhou988/CSharpApi](https://github.com/jenniferzhou988/CSharpApi) — branch: `development`
-
----
-
-## Table of Contents
-
-- [Tech Stack](#tech-stack)
-- [Application Onboarding](#application-onboarding)
-- [API Controllers](#api-controllers)
-- [Data Model](#data-model)
-- [Project Structure](#project-structure)
-
----
+This project is a .NET 9 Web API for authentication, product catalog management, shopping carts, orders, shipping tracking, and user profile access.
 
 ## Tech Stack
 
-| Technology | Purpose |
-|---|---|
-| .NET 9 / ASP.NET Core | Web API framework |
-| Entity Framework Core | ORM & database migrations (SQL Server) |
-| JWT Bearer + Refresh Tokens | Authentication with secure token rotation |
-| BCrypt | Password hashing (work factor 12) |
-| Swagger / OpenAPI | Interactive API documentation |
-| Rate Limiting | Fixed-window limits on auth endpoints |
-
----
-
-## Application Onboarding
-
-### Prerequisites
-
-- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
-- [SQL Server](https://www.microsoft.com/sql-server) (local or remote)
-- [EF Core CLI tools](https://learn.microsoft.com/ef/core/cli/dotnet)
-
-Install the EF Core tools globally:
-
-### 1. Clone the Repository
-
-````````
-
-### 2. Configure the Connection String
-
-Edit `appsettings.json` and set your SQL Server connection string:
-
-````````
-
-### 3. Configure JWT Settings
-
-Update the JWT section in `appsettings.json` with a strong signing key:
-
-````````
-
-### 4. Entity Framework Core — Database Migration
-
-The project uses `GdctContext` as the EF Core `DbContext`, registered in `Program.cs`:
-
-````````
-
-Run the following commands to create and apply migrations:
-
-````````
-
-
-# Response
-
-````````
-
-- Swagger UI: `https://localhost:<port>/swagger`
-- Health check: `GET /health` returns `{ "ok": true }`
-
----
-
-## API Controllers
-
-### AuthController — `api/Auth`
-
-Handles user registration, login, JWT issuance, and refresh token rotation. All auth endpoints are rate-limited.
-
-| Method | Route | Auth | Rate Limit | Description |
-|---|---|---|---|---|
-| POST | `api/Auth/register` | No | `auth` (100/10min) | Register a new user account |
-| POST | `api/Auth/login` | No | `login` (10/10min) | Login with email and password |
-| POST | `api/Auth/refresh` | No | `auth` | Rotate refresh token for a new token pair |
-| POST | `api/Auth/logout` | No | `auth` | Revoke a single refresh token |
-| POST | `api/Auth/logout-all` | Yes | `auth` | Revoke all refresh tokens for the current user |
-
-**Register request:**
-
-````````
-
-**Login request:**
-
-````````
-
-
-# Response
-
-````````
-
-**Auth response (register and login):**
-
-````````
-
-
-# Response
-````````
-
-> When `UseCookiesForRefreshToken` is `true` in `appsettings.json`, the refresh token is sent and read via an HttpOnly cookie (`rt`) instead of the request body.
-
----
-
-### ProfileController — `api/Profile`
-
-Returns the authenticated user's profile. Requires a valid JWT Bearer token.
-
-| Method | Route | Auth | Description |
-|---|---|---|---|
-| GET | `api/Profile/me` | Yes | Get the current user's profile |
-
-**Response:**
-````````
-
-
-# Response
-````````
-
----
-
-### ProductController — `api/Product`
-
-Full CRUD for products, plus sub-resource management for product images and category assignments.
-
-#### Product CRUD
-
-| Method | Route | Description |
-|---|---|---|
-| GET | `api/Product` | Get all products (includes images and categories) |
-| GET | `api/Product/{id}` | Get a single product by ID |
-| POST | `api/Product` | Create a new product |
-| PUT | `api/Product/{id}` | Update an existing product |
-| DELETE | `api/Product/{id}` | Delete a product |
-
-**Product request:**
-
-````````
-
-
-# Response
-````````
-
-#### Product Images
-
-| Method | Route | Description |
-|---|---|---|
-| POST | `api/Product/{productId}/images` | Add an image to a product |
-| DELETE | `api/Product/{productId}/images/{imageId}` | Remove an image from a product |
-
-**Image request:**
-
-````````
-
-
-# Response
-````````
-
-#### Product Categories
-
-| Method | Route | Description |
-|---|---|---|
-| POST | `api/Product/{productId}/categories/{categoryId}` | Link a category to a product (idempotent) |
-| DELETE | `api/Product/{productId}/categories/{categoryId}` | Remove a category from a product |
-
----
-
-## Data Model
-
-### Entity Relationship Diagrams (ERDs)
-
-[Download the latest ERD diagram](https://danniseltodo.com/erd/schema_latest.pdf)
-
-### Database tables created by EF Core:
-
-| Table | Entity | Description |
-|---|---|---|
-| `UserInfo` | `User` | User accounts with BCrypt-hashed passwords |
-| `UserRole` | `UserRole` | Role lookup (e.g. Admin, Client User) |
-| `RefreshTokens` | `RefreshToken` | Hashed refresh tokens for JWT rotation |
-| `Products` | `Product` | Product catalog |
-| `ProductImages` | `ProductImage` | Images linked to a product (one-to-many) |
-| `ProductCategory` | `ProductCategory` | Product categories |
-| `ProductCategoryLink` | `ProductCategoryLink` | Many-to-many join between Products and Categories |
-| `AppConfigs` | `AppConfig` | Application configuration entries |
-
-All domain entities inherit from `GDCTEntityBase<int>` which provides: `Id` (auto-increment PK), `Status`, `CreatedBy`, `Created`, `ModifiedBy`, `Modified`.
-
-**Key relationships:**
-- **Product** to **ProductImage**: One-to-many (cascade delete)
-- **Product** to **ProductCategory**: Many-to-many via `ProductCategoryLink` (unique composite index, cascade delete on both FKs)
-- **User** to **RefreshToken**: One-to-many (unique index on `TokenHash`)
-- **UserRole** to **User**: One-to-many (cascade delete)
-
----
+- ASP.NET Core Web API (`net9.0`)
+- Entity Framework Core + SQL Server
+- JWT authentication + refresh token rotation
+- Swagger/OpenAPI
+- BCrypt password hashing
 
 ## Project Structure
 
-````````
+```text
+ShoppingCart.Server/
+|-- Contracts/                 # API request/response DTOs
+|-- Controllers/               # REST API controllers
+|-- Data/                      # DbContext and data access infrastructure
+|-- Extensions/                # Service registration extensions
+|-- Models/                    # Domain entities and base model types
+|-- Properties/                # launchSettings and runtime profiles
+|-- Repository/
+|   |-- Interface/             # Repository contracts
+|   `-- Repositories/          # Repository implementations
+|-- Services/                  # Business and security services (token, encryption)
+|-- Utils/                     # Utility helpers
+|-- Program.cs                 # Application entry point and middleware pipeline
+|-- appsettings.json           # Shared configuration
+|-- appsettings.Development.json
+|-- ShoppingCartApi.csproj     # Project file
+`-- ShoppingCartApi.sln        # Solution file
+```
 
+Folder responsibilities:
 
-# Response
+- `Controllers`: Defines API routes and HTTP behaviors.
+- `Repository`: Encapsulates data access and aggregate loading patterns.
+- `Models`: Represents database entities and relationships used by EF Core.
+- `Data`: Central EF Core mapping in `GdctContext` and supporting converters.
+- `Services`: Authentication/token and encryption services.
+- `Contracts`: External API input/output contracts used by controllers.
 
-````````
+## API Overview
 
----
+Base URL in local development is typically:
 
-## License
+- `https://localhost:<port>`
 
-[Specify your license here.]
+Swagger UI is enabled:
+
+- `GET /swagger`
+
+Health endpoint:
+
+- `GET /health`
+
+### API Controllers
+
+| Controller | Base Route | Endpoints | Notes |
+|---|---|---|---|
+| AuthController | `/api/Auth` | `POST /register`<br>`POST /login`<br>`POST /refresh`<br>`POST /logout`<br>`POST /logout-all` | Registration, login, refresh-token rotation, logout actions |
+| ProfileController | `/api/Profile` | `GET /me` | Authorized endpoint to read current user profile |
+| ProductController | `/api/Product` | `GET /`<br>`GET /{id}`<br>`POST /`<br>`PUT /{id}`<br>`DELETE /{id}`<br>`POST /{productId}/images`<br>`DELETE /{productId}/images/{imageId}`<br>`POST /{productId}/categories/{categoryId}`<br>`DELETE /{productId}/categories/{categoryId}`<br>`POST /{productId}/import` | Product CRUD, image and category linking, inventory import |
+| ShoppingCartController | `/api/ShoppingCart` | `GET /`<br>`GET /{id}`<br>`POST /`<br>`DELETE /{id}`<br>`POST /{shoppingCartId}/items`<br>`PUT /{shoppingCartId}/items/{detailId}`<br>`DELETE /{shoppingCartId}/items/{detailId}` | Cart CRUD and line-item management |
+| OrderController | `/api/Order` | `GET /`<br>`GET /{id}`<br>`POST /` | Creates orders from customer, card, address, and item list |
+| ShippingTrackingController | `/api/ShippingTracking` | `GET /`<br>`GET /{id}`<br>`POST /` | Creates and tracks shipping with provider + tracking number |
+| WeatherForecastController | `/WeatherForecast` | `GET /` | Sample/demo endpoint |
+
+## Database Entities
+
+All entities are managed through `GdctContext` and most inherit common audit/status fields from `GDCTEntityBase<TId>`:
+
+- `Id`, `Status`, `CreatedBy`, `Created`, `ModifiedBy`, `Modified`
+
+Primary entities in this API:
+
+| Domain | Entities |
+|---|---|
+| Identity and access | `User`, `Role`, `UserRole`, `RefreshToken`, `UserCustomerLink` |
+| Customer profile | `Customer`, `Address`, `AddressType`, `CustomerAddressLink` |
+| Payments | `BillingMethod`, `BankCardInfo`, `CustomerBillingCardLink` |
+| Catalog | `Product`, `ProductImage`, `ProductCategory`, `ProductCategoryLink`, `ProductImportRecord`, `ProductInventory` |
+| Cart and ordering | `ShoppingCart`, `ShoppingCartDetail`, `Order`, `OrderDetail`, `OrderStatus` |
+| Shipping | `ShippingServiceProvider`, `ShippingTracking`, `ShippingItemDetail` |
+| Configuration | `AppConfig` |
+
+## Entity Relationships
+
+| Domain | Source Entity | Cardinality | Target Entity | Notes |
+|---|---|---|---|---|
+| Identity | `User` | 1..* | `RefreshToken` | One user can own multiple refresh tokens |
+| Identity | `User` | *..* | `Role` | Implemented through `UserRole` |
+| Identity | `User` | 1..1 | `UserCustomerLink` | One-to-one link row |
+| Identity | `Customer` | 1..1 | `UserCustomerLink` | One customer linked to one user |
+| Customer and addresses | `Customer` | 1..* | `CustomerAddressLink` | Customer can store multiple addresses |
+| Customer and addresses | `Address` | 1..* | `CustomerAddressLink` | Address can be referenced by link rows |
+| Customer and addresses | `AddressType` | 1..* | `CustomerAddressLink` | Billing/Shipping role of address |
+| Payments | `BillingMethod` | 1..* | `BankCardInfo` | Card belongs to one billing method |
+| Payments | `Customer` | 1..* | `CustomerBillingCardLink` | Customer can own multiple saved cards |
+| Payments | `BankCardInfo` | 1..* | `CustomerBillingCardLink` | Card can be referenced by link rows |
+| Product catalog | `Product` | 1..* | `ProductImage` | Product media |
+| Product catalog | `Product` | *..* | `ProductCategory` | Implemented through `ProductCategoryLink` |
+| Product catalog | `Product` | 1..* | `ProductImportRecord` | Inventory import history |
+| Product catalog | `Product` | 1..* | `ProductInventory` | Inventory snapshots/adjustments |
+| Shopping and orders | `Customer` | 1..* | `ShoppingCart` | Customer carts |
+| Shopping and orders | `ShoppingCart` | 1..* | `ShoppingCartDetail` | Cart line items |
+| Shopping and orders | `Product` | 1..* | `ShoppingCartDetail` | Product appears in cart details |
+| Shopping and orders | `Customer` | 1..* | `Order` | Customer orders |
+| Shopping and orders | `OrderStatus` | 1..* | `Order` | Current order state |
+| Shopping and orders | `Order` | 1..* | `OrderDetail` | Order line items |
+| Shopping and orders | `Product` | 1..* | `OrderDetail` | Product appears in order details |
+| Shipping | `ShippingServiceProvider` | 1..* | `ShippingTracking` | Provider tracking records |
+| Shipping | `OrderDetail` | 1..1 | `ShippingItemDetail` | One shipping detail per order detail |
+
+## Onboarding
+
+### 1) Prerequisites
+
+- .NET SDK 9.x
+- SQL Server instance
+- (Optional) Angular client project if using SPA proxy
+
+### 2) Configure app settings
+
+Update `appsettings.json` values before running:
+
+- `ConnectionStrings:GDCTConnection`
+- `Jwt:Issuer`
+- `Jwt:Audience`
+- `Jwt:SigningKey`
+- `Jwt:AccessTokenMinutes`
+- `Jwt:RefreshTokenDays`
+- `Encryption:Key`
+- `UseCookiesForRefreshToken`
+- `Cors:AllowedOrigins`
+
+Recommended:
+
+- Move secrets (connection strings, JWT signing key, encryption key) to user secrets or environment variables for non-local use.
+
+### 3) Restore and run
+
+```bash
+dotnet restore
+dotnet build
+dotnet run
+```
+
+### 4) Verify startup
+
+- Open Swagger: `https://localhost:<port>/swagger`
+- Health check: `https://localhost:<port>/health`
+
+### 5) First-time API flow
+
+1. Register user: `POST /api/Auth/register`
+2. Login: `POST /api/Auth/login`
+3. Copy `accessToken`
+4. In Swagger, click **Authorize** and set `Bearer <accessToken>`
+5. Call `GET /api/Profile/me`
+
+### 6) Database setup notes
+
+- The project uses EF Core model configuration in `Data/GdctContext.cs`.
+- If migrations are introduced, apply them with:
+
+```bash
+dotnet ef database update
+```
+
+If you do not use migrations, ensure the target database schema is created to match the current model.
+
+## Seed Data Notes
+
+The model includes seeded records for some lookup/reference tables, including:
+
+- `Role`
+- `AddressType`
+- `OrderStatus`
+- `BillingMethod`
+- `ProductCategory`
+
+This helps bootstrap core workflow data for local testing.

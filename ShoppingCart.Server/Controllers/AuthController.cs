@@ -6,7 +6,6 @@ using ShoppingCartAPI.Data;
 using ShoppingCartAPI.Models;
 using ShoppingCartAPI.Services;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 
 namespace ShoppingCartAPI.Controllers
@@ -71,16 +70,28 @@ namespace ShoppingCartAPI.Controllers
                 FirstName = req.FirstName,
                 LastName = req.LastName,
                 Status = 1,
-                OrgId = req.OrgId,
-                UserRoleId = 1,
-                // UserRole = new UserRole { Id =1, RoleName= "Client User" }
             };
-            user.UserRole = await _db.UserRoles.FirstOrDefaultAsync(r => r.Id == user.UserRoleId, ct);
 
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password, workFactor: 12);
 
             _db.Users.Add(user);
             await _db.SaveChangesAsync(ct);
+
+            // Assign default Role as USER (Id = 2)
+            var userRole = await _db.Roles.FirstOrDefaultAsync(r => r.RoleName == "USER", ct);
+            if (userRole != null)
+            {
+                var userRoleLink = new UserRole
+                {
+                    UserId = user.Id,
+                    RoleId = userRole.Id,
+                    Status = 1,
+                    Created = DateTime.UtcNow,
+                    CreatedBy = "System"
+                };
+                _db.UserRoles.Add(userRoleLink);
+                await _db.SaveChangesAsync(ct);
+            }
 
             var (access, refresh,expiry) = await _tokens.IssueTokenPairAsync(user, ct);
             if (_cfg.GetValue<bool>("UseCookiesForRefreshToken"))
@@ -107,10 +118,9 @@ namespace ShoppingCartAPI.Controllers
                 LastName = o.LastName,
                 PasswordHash = o.PasswordHash,
                 Status = 1,
-                OrgId = o.OrgId,
-                UserRoleId = o.UserRoleId,
-                UserRole = o.UserRole,
-            })
+                UserRoles =o.UserRoles,
+                Roles=o.UserRoles.Select(ur=>ur.Role).ToList()
+                })
             .SingleOrDefaultAsync(u =>
             u.Email == req.Email.Trim().ToLowerInvariant()
             ,ct);

@@ -1,16 +1,19 @@
-﻿namespace ShoppingCartAPI.Models;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-public partial class UserRole : GDCTEntityBase<int>
+namespace ShoppingCartAPI.Models
 {
-    
-    public string? RoleName { get; set; } 
+    [Table("UserRoles")]
+    public class UserRole : GDCTEntityBase<int>
+    {
+        public int UserId { get; set; }
 
-    public virtual ICollection<User>? Users { get; set; } 
+        [ForeignKey(nameof(UserId))]
+        public User User { get; set; } = null!;
 
-    public DateTime? EffectiveDate { get; set; }
+        public int RoleId { get; set; }
 
-    public DateTime? ExpiryDate { get; set; }
-
-    public bool? PublishTemplateToFlag { get; set; }
-
+        [ForeignKey(nameof(RoleId))]
+        public Role Role { get; set; } = null!;
+    }
 }

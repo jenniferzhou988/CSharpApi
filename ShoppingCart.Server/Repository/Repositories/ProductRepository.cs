@@ -1,4 +1,3 @@
-
 using Microsoft.EntityFrameworkCore;
 using ShoppingCartAPI.Data;
 using ShoppingCartAPI.Models;
@@ -159,6 +158,56 @@ namespace ShoppingCartAPI.Repository.Repositories
                 ctx.ProductCategoryLinks.Remove(link);
                 await ctx.SaveChangesAsync();
                 return true;
+            }
+        }
+
+        public async Task<ProductImportRecord?> ImportProductAsync(int productId, decimal importPrice, int quantity, string? comment)
+        {
+            using (var ctx = _dbcontextfactory.CreateDbContext())
+            {
+                var product = await ctx.Products.FindAsync(productId);
+                if (product == null)
+                    return null;
+
+                // Create ProductImportRecord
+                var importRecord = new ProductImportRecord
+                {
+                    ProductId = productId,
+                    ImportPrice = importPrice,
+                    Quantity = quantity,
+                    Comment = comment,
+                    Status = 1,
+                    Created = DateTime.UtcNow
+                };
+
+                ctx.ProductImportRecords.Add(importRecord);
+
+                // Create ProductInventory if not exist, otherwise update Quantity
+                var inventory = await ctx.ProductInventories
+                    .FirstOrDefaultAsync(i => i.ProductId == productId);
+
+                if (inventory == null)
+                {
+                    inventory = new ProductInventory
+                    {
+                        ProductId = productId,
+                        Quantity = quantity,
+                        Description = $"Inventory for {product.ProductName}",
+                        Comment = $"Created from import on {DateTime.UtcNow:yyyy-MM-dd}",
+                        Status = 1,
+                        Created = DateTime.UtcNow
+                    };
+                    ctx.ProductInventories.Add(inventory);
+                }
+                else
+                {
+                    inventory.Quantity += quantity;
+                    inventory.Modified = DateTime.UtcNow;
+                    ctx.ProductInventories.Update(inventory);
+                }
+
+                await ctx.SaveChangesAsync();
+                return importRecord;
             }
         }
     }

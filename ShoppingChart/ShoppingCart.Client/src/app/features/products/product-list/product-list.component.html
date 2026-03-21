@@ -1,0 +1,81 @@
+<mat-toolbar color="primary">
+  <span>Product Management</span>
+  <span class="spacer"></span>
+  <button mat-raised-button color="accent" (click)="addProduct()">
+    <mat-icon>add</mat-icon> New Product
+  </button>
+</mat-toolbar>
+
+<div class="table-container">
+  <table mat-table [dataSource]="products" class="full-width">
+
+    <!-- Product Name -->
+    <ng-container matColumnDef="productName">
+      <th mat-header-cell *matHeaderCellDef>Product Name</th>
+      <td mat-cell *matCellDef="let p">{{ p.productName }}</td>
+    </ng-container>
+
+    <!-- SKU -->
+    <ng-container matColumnDef="sku">
+      <th mat-header-cell *matHeaderCellDef>SKU</th>
+      <td mat-cell *matCellDef="let p">{{ p.sku || '—' }}</td>
+    </ng-container>
+
+    <!-- Brand -->
+    <ng-container matColumnDef="brandName">
+      <th mat-header-cell *matHeaderCellDef>Brand</th>
+      <td mat-cell *matCellDef="let p">{{ p.brandName || '—' }}</td>
+    </ng-container>
+
+    <!-- Price -->
+    <ng-container matColumnDef="price">
+      <th mat-header-cell *matHeaderCellDef>Price</th>
+      <td mat-cell *matCellDef="let p">{{ p.price | currency }}</td>
+    </ng-container>
+
+    <!-- Images count -->
+    <ng-container matColumnDef="images">
+      <th mat-header-cell *matHeaderCellDef>Images</th>
+      <td mat-cell *matCellDef="let p">
+        <mat-chip-set>
+          <mat-chip>{{ p.images?.length || 0 }}</mat-chip>
+        </mat-chip-set>
+      </td>
+    </ng-container>
+
+    <!-- Inventory -->
+    <ng-container matColumnDef="inventory">
+      <th mat-header-cell *matHeaderCellDef>Inventory</th>
+      <td mat-cell *matCellDef="let p">{{ getTotalInventory(p) }}</td>
+    </ng-container>
+
+    <!-- Actions -->
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef>Actions</th>
+      <td mat-cell *matCellDef="let p">
+        <button mat-icon-button matTooltip="Edit" (click)="editProduct(p)">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button matTooltip="Images" (click)="openImageDialog(p)">
+          <mat-icon>image</mat-icon>
+        </button>
+        <button mat-icon-button matTooltip="Import Stock" (click)="openImportDialog(p)">
+          <mat-icon>inventory_2</mat-icon>
+        </button>
+        <button mat-icon-button matTooltip="Delete" color="warn" (click)="deleteProduct(p)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+
+  @if (loading) {
+  <div class="loading-overlay">Loading…</div>
+  }
+  @if (!loading && products.length === 0) {
+  <div class="empty-state">No products found. Click "New Product" to create one.</div>
+  }
+</div>

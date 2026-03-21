@@ -1,0 +1,39 @@
+<h2 mat-dialog-title>Images — {{ product.productName }}</h2>
+
+<mat-dialog-content>
+  <!-- Existing images -->
+  <mat-list>
+    @for (img of product.images; track img.id) {
+    <mat-list-item>
+      <img matListItemAvatar [src]="img.imageUrl" [alt]="img.altText || 'Product image'"
+           class="thumb">
+      <span matListItemTitle>{{ img.altText || img.imageUrl }}</span>
+      <button mat-icon-button matListItemMeta color="warn" (click)="removeImage(img)">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </mat-list-item>
+    }
+    @if (!product.images || product.images.length === 0) {
+    <p class="empty-hint">No images yet</p>
+    }
+  </mat-list>
+
+  <!-- Add new image -->
+  <form [formGroup]="form" (ngSubmit)="addImage()" class="add-form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Image URL</mat-label>
+      <input matInput formControlName="imageUrl">
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Alt Text</mat-label>
+      <input matInput formControlName="altText">
+    </mat-form-field>
+    <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">
+      <mat-icon>add</mat-icon> Add Image
+    </button>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="close()">Close</button>
+</mat-dialog-actions>

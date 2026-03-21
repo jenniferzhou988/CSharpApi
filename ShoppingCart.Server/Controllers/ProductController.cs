@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using ShoppingCartAPI.Models;
 using ShoppingCartAPI.Repository.Interface;
 namespace AngularApplication.Controllers
 {

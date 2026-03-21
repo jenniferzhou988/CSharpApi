@@ -29,7 +29,9 @@ namespace ShoppingCartAPI.Repository.Repositories
         {
             using (var ctx = _dbcontextfactory.CreateDbContext())
             {
-                return await ctx.Products.FindAsync(id);
+                return await ctx.Products
+                    .Include(p => p.Images)
+                    .FirstOrDefaultAsync(p => p.Id == id);
             }
                 
         }
@@ -38,7 +40,10 @@ namespace ShoppingCartAPI.Repository.Repositories
         {
             using (var ctx = _dbcontextfactory.CreateDbContext())
             {
-                return await ctx.Products.AsNoTracking().ToListAsync();
+                return await ctx.Products
+                    .Include(p => p.Images)
+                    .AsNoTracking()
+                    .ToListAsync();
             }
              
         }
@@ -76,6 +81,36 @@ namespace ShoppingCartAPI.Repository.Repositories
 
             }
                 
+        }
+
+        public async Task<ProductImage?> AddImageAsync(int productId, ProductImage image)
+        {
+            using (var ctx = _dbcontextfactory.CreateDbContext())
+            {
+                var product = await ctx.Products.FindAsync(productId);
+                if (product == null)
+                    return null;
+
+                image.ProductId = productId;
+                ctx.ProductImages.Add(image);
+                await ctx.SaveChangesAsync();
+                return image;
+            }
+        }
+
+        public async Task<bool> RemoveImageAsync(int productId, int imageId)
+        {
+            using (var ctx = _dbcontextfactory.CreateDbContext())
+            {
+                var image = await ctx.ProductImages
+                    .FirstOrDefaultAsync(i => i.Id == imageId && i.ProductId == productId);
+                if (image == null)
+                    return false;
+
+                ctx.ProductImages.Remove(image);
+                await ctx.SaveChangesAsync();
+                return true;
+            }
         }
     }
 }

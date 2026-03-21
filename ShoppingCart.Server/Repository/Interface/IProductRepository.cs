@@ -11,5 +11,7 @@ namespace ShoppingCartAPI.Repository.Interface
         Task<IEnumerable<Product>> GetAllAsync();
         Task<Product?> UpdateAsync(Product product);
         Task<bool> DeleteAsync(int id);
+        Task<ProductImage?> AddImageAsync(int productId, ProductImage image);
+        Task<bool> RemoveImageAsync(int productId, int imageId);
     }
 }

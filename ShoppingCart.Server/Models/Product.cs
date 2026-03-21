@@ -1,5 +1,6 @@
 using ShoppingCartAPI.Models;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -17,5 +18,6 @@ namespace AngularApplication.Models
         [MaxLength(1000)]
         public string? Description { get; set; }
 
+        public ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
     }
 }
